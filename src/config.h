@@ -41,13 +41,23 @@ typedef struct Visibility {
 	PRECISION v;
 	PRECISION w;
 	Complex intensity;
-	PRECISION weight;
 } Visibility;
 
 typedef struct Config {
+	int numVisibilities;
+	int numSources;
 	char *source_file;
 	char *vis_file;
 	bool gpu_enabled;
+	bool synthetic_sources;
+	bool synthetic_visibilities;
+	double min_u;
+	double max_u;
+	double min_v;
+	double max_v;
+	double distanceBetweenVis;
+	int numVisAcrossU;
+	int numVisAcrossV;
 } Config;
 
 
@@ -55,7 +65,10 @@ typedef struct Config {
 //     Function Headers    //
 //=========================//
 void initConfig (Config *config);
-void loadSources(Source *sources, char* source_file);
-void performExtraction(Source *sources, Visibility *visibilities);
+void loadSources(Config *config, Source *sources);
+void loadVisibilities(Config *config, Visibility *visibilities);
+void performExtraction(Config *config, Source *sources, Visibility *visibilities);
+void saveVisibilities(Config *config, Visibility *visibilities);
+Complex complexMult(Complex z1, Complex z2);
 
 #endif /* CONFIG_H_ */
