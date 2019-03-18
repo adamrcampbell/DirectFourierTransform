@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#include <time.h>
 
 #include "config.h"
 
@@ -15,6 +16,10 @@ int main(int argc, const char* argv[])
 	printf("==============================================================\n");
 	printf(">>> AUT HPC Research Laboratory - Direct Fourier Transform <<<\n");
 	printf("==============================================================\n\n");
+
+	// Seed random from time
+	srand(time(NULL));
+
 	Config config;
 	initConfig(&config);
 
@@ -53,7 +58,7 @@ int main(int argc, const char* argv[])
 void initConfig (Config *config)
 {
 	/// Number of sources to process
-	config->numSources = 1;
+	config->numSources = 100;
 
 	// Use fixed sources (not from file)
 	config->synthetic_sources = true;
@@ -65,23 +70,32 @@ void initConfig (Config *config)
 	config->gpu_enabled = false;
 
 	// Origin of Sources
-	config->source_file = "input_file.txt";
+	config->source_file = "DFT_sources.txt";
 
 	// Destination of Visibilities
-	config->vis_file    = "output_file.txt";
+	config->vis_file    = "DFT_visibilities.txt";
+
+	// Dimension of Fourier domain grid (TESTING ONLY)
+	config->grid_size = 18000.0;
+
+	// Fourier domain grid cell size in radians (TESTING ONLY)
+	config->cell_size = 0.00000639708380288949;
+
+	// Scalar for visibility coordinates
+	config->uv_scale = config->grid_size * config->cell_size;
 
 	// Range for visibility u coordinates
-	config->min_u = -5000.0;
-	config->max_u = 5000.0;
+	config->min_u = -500.0;
+	config->max_u = 500.0;
 
 	// Range for visibility v coordinates
-	config->min_v = -5000.0;
-	config->max_v = 5000.0;
+	config->min_v = -500.0;
+	config->max_v = 500.0;
 
 	// Visibility distribution across image
-	config->distanceBetweenVis = 100.0;
-	config->numVisAcrossU = (int) fabs(config->min_u - config->max_u) / config->distanceBetweenVis;
-	config->numVisAcrossV = (int) fabs(config->min_v - config->max_v) / config->distanceBetweenVis;
+	config->distanceBetweenVis = 2.5;
+	config->numVisAcrossU = (int) (fabs(config->min_u - config->max_u) / config->distanceBetweenVis) + 1.0;
+	config->numVisAcrossV = (int) (fabs(config->min_v - config->max_v) / config->distanceBetweenVis) + 1.0;
 
 	// Number of visibilities per source
 	config->numVisibilities = config->numVisAcrossU * config->numVisAcrossV;
@@ -95,15 +109,25 @@ void loadSources(Config *config, Source *sources)
 
 		for(int n = 0; n < config->numSources; ++n)
 		{
-			sources[n] = (Source) {.l = 0.0,
-								   .m = 0.0,
-								   .intensity = 1.0};
+			sources[n] = (Source) {.l = 0.0, //randomInRange(0.0, 0.5),
+								   .m = 0.0, //randomInRange(0.0, 0.5),
+								   .intensity = 0.001};
 		}
 	}
 	else
 	{
 		printf(">>> UPDATE: Using Sources from file...\n\n");
-		// Load from file
+
+//		FILE *file = fopen(config.source_file, "r");
+//
+//		// Unable to open file
+//		if(!file)
+//		{
+//			printf(">>> ERROR: Unable to load sources from file...\n\n");
+//			return;
+//		}
+//
+//		fclose(file);
 	}
 }
 
@@ -112,11 +136,20 @@ void loadVisibilities(Config *config, Visibility *visibilities)
 	if(config->synthetic_visibilities)
 	{
 		printf(">>> UPDATE: Using synthetic Visibilities...\n\n");
+		int visCounter = 0;
 
-		for(int n = 0; n < config->numVisibilities; ++n)
+		// Distribute equally over min and max v
+		for(double v = config->min_v; v <= config->max_v; v += config->distanceBetweenVis)
 		{
-			// Distribute visibilities over various u and v coordinates
+			// Distribute equally over min and max u
+			for(double u = config->min_u; u <= config->max_u; u += config->distanceBetweenVis)
+			{
+				visibilities[visCounter++] = (Visibility) {.u = u, .v = v};
+				// printf("U: %f, V: %f\n", u, v);
+			}
 		}
+
+		printf("Total Vis: %d, config total vis: %d\n", visCounter, config->numVisibilities);
 	}
 	else
 	{
@@ -133,17 +166,27 @@ void performExtraction(Config *config, Source *sources, Visibility *visibilities
 	// For all visibilities
 	for(int v = 0; v < config->numVisibilities; ++v)
 	{
+		Visibility *vis = &visibilities[v];
+		// vis->u *= config->uv_scale;
+		// vis->v *= config->uv_scale;
+		// vis->w *= config->uv_scale;
 		Complex sourceSum = (Complex) {.real = 0.0, .imaginary = 0.0};
 
 		// For all sources
-		for(int n = 0; n < config->numSources; ++n)
+		for(int s = 0; s < config->numSources; ++s)
 		{
-			Source *s = &sources[n];
-			double x = sqrt(1.0 - pow(s->l, 2.0) - pow(s->m, 2.0));
-			// double theta =
+			Source *src = &sources[s];
+			double srcSqrt = sqrt(1.0 - pow(src->l, 2.0) - pow(src->m, 2.0));
+			double theta = vis->u*src->l + vis->v*src->m + vis->w*(srcSqrt-1.0);
+			Complex thetaComplex = (Complex) {.real = cos(2.0 * M_PI * theta),
+											  .imaginary = -sin(2.0 * M_PI * theta)};
+			thetaComplex.real *= src->intensity / srcSqrt;
+			thetaComplex.imaginary *= src->intensity / srcSqrt;
+			sourceSum.real += thetaComplex.real;
+			sourceSum.imaginary += thetaComplex.imaginary;
 		}
 
-
+		vis->intensity = sourceSum;
 	}
 
 	printf(">>> UPDATE: Extraction complete...\n\n");
@@ -182,8 +225,9 @@ void saveVisibilities(Config *config, Visibility *visibilities)
 	printf(">>> UPDATE: Completed writing of visibilities to file...\n\n");
 }
 
-Complex complexMult(Complex z1, Complex z2)
+double randomInRange(double min, double max)
 {
-	return (Complex) {.real      = z1.real * z2.real - z1.imaginary * z2.imaginary,
-					  .imaginary = z1.real * z2.imaginary + z1.imaginary * z2.real};
+    double range = (max - min);
+    double div = RAND_MAX / range;
+    return min + (rand() / div);
 }

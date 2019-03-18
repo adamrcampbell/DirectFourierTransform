@@ -58,6 +58,9 @@ typedef struct Config {
 	double distanceBetweenVis;
 	int numVisAcrossU;
 	int numVisAcrossV;
+	double grid_size;
+	double cell_size;
+	double uv_scale;
 } Config;
 
 
@@ -69,6 +72,6 @@ void loadSources(Config *config, Source *sources);
 void loadVisibilities(Config *config, Visibility *visibilities);
 void performExtraction(Config *config, Source *sources, Visibility *visibilities);
 void saveVisibilities(Config *config, Visibility *visibilities);
-Complex complexMult(Complex z1, Complex z2);
+double randomInRange(double min, double max);
 
 #endif /* CONFIG_H_ */
