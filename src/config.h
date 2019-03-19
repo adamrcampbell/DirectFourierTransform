@@ -51,16 +51,15 @@ typedef struct Config {
 	bool gpu_enabled;
 	bool synthetic_sources;
 	bool synthetic_visibilities;
+	bool gaussian_distribution_sources;
 	double min_u;
 	double max_u;
 	double min_v;
 	double max_v;
-	double distanceBetweenVis;
-	int numVisAcrossU;
-	int numVisAcrossV;
 	double grid_size;
 	double cell_size;
 	double uv_scale;
+	double frequency_hz;
 } Config;
 
 
@@ -68,10 +67,11 @@ typedef struct Config {
 //     Function Headers    //
 //=========================//
 void initConfig (Config *config);
-void loadSources(Config *config, Source *sources);
-void loadVisibilities(Config *config, Visibility *visibilities);
+void loadSources(Config *config, Source **sources);
+void loadVisibilities(Config *config, Visibility **visibilities);
 void performExtraction(Config *config, Source *sources, Visibility *visibilities);
 void saveVisibilities(Config *config, Visibility *visibilities);
 double randomInRange(double min, double max);
+double sampleNormal();
 
 #endif /* CONFIG_H_ */
