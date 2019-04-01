@@ -23,9 +23,6 @@ int main(int argc, const char* argv[])
 	printf(">>> AUT HPC Research Laboratory - Direct Fourier Transform <<<\n");
 	printf("==============================================================\n\n");
 
-        printf("Hello World\n");
-	exit(0);
-
 	// Seed random from time
 	srand(time(NULL));
 
@@ -76,7 +73,7 @@ int main(int argc, const char* argv[])
 	return EXIT_SUCCESS;
 }
 
-void initConfig (Config *config)
+void initConfig(Config *config)
 {
 	/// Number of sources to process
 	config->numSources = 1;
@@ -94,10 +91,10 @@ void initConfig (Config *config)
 	config->gpu_enabled = false;
 
 	// Origin of Sources
-	config->source_file = "DFT_sources.txt";
+	config->source_file = "../sources.txt";
 
 	// Destination of Visibilities
-	config->vis_file    = "/home/seth/Desktop/HPC/Projects/PerfectImager/Data/DFT_visibilities.txt";
+	config->vis_file    = "../visibilities.txt";
 
 	// Dimension of Fourier domain grid
 	config->grid_size = 1024.0;
@@ -120,7 +117,8 @@ void initConfig (Config *config)
 	config->max_v = config->grid_size / 2.0;
 
 	// Number of visibilities per source
-	config->numVisibilities = 40000;
+	config->numVisibilities = 100;
+}
 
 void loadSources(Config *config, Source **sources)
 {
