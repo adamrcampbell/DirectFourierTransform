@@ -7,68 +7,10 @@
 
 #include "direct_fourier_transform.h"
 
-// Pi (double precision)
-#ifndef M_PI
-	#define M_PI 3.14159265358979323846
-#endif
-
-// Speed of light
-#ifndef C
-	#define C 299792458.0
-#endif
-
-int main(int argc, const char* argv[])
-{
-	printf("==============================================================\n");
-	printf(">>> AUT HPC Research Laboratory - Direct Fourier Transform <<<\n");
-	printf("==============================================================\n\n");
-
-	// Seed random from time
-	srand(time(NULL));
-
-	Config config;
-	initConfig(&config);
-
-	// Obtain Sources from file
-	Source *sources = NULL;
-	loadSources(&config, &sources);
-	if(sources == NULL)
-	{	
-        printf(">>> ERROR: Source memory was unable to be allocated \n");
-		return EXIT_FAILURE;
-	}
-
-	// Obtain Visibilities from file
-	Visibility *visibilities = NULL;
-	loadVisibilities(&config, &visibilities);
-
-    // Unable to obtain visibilities
-	if(visibilities == NULL)
-	{	printf(">>> ERROR: Visibility memory was unable to be allocated \n");
-	    if(sources) free(sources);
-		return EXIT_FAILURE;
-	}
-
-	// Perform extraction of visibilities
-	printf(">>> UPDATE: Performing visibility extraction using CPU...\n\n");
-	performExtraction(&config, sources, visibilities);
-
-	// Save visibilities to file
-	saveVisibilities(&config, visibilities);
-
-	// Clean up
-	if(visibilities) free(visibilities);
-	if(sources)      free(sources);
-
-	printf(">>> UPDATE: Direct Fourier Transform operations complete, exiting...\n\n");
-
-	return EXIT_SUCCESS;
-}
-
-void initConfig(Config *config)
+void init_config(Config *config)
 {
 	/// Number of sources to process
-	config->numSources = 1;
+	config->num_sources = 1;
 
 	// Use fixed sources (not from file)
 	config->synthetic_sources = false;
@@ -106,73 +48,88 @@ void initConfig(Config *config)
 	config->max_v = config->grid_size / 2.0;
 
 	// Number of visibilities per source
-	config->numVisibilities = 100;
+	config->num_visibilities = 100;
+
+	// Seed random from time
+	srand(time(NULL));
 }
 
-void loadSources(Config *config, Source **sources)
+void load_sources(Config *config, Source **sources)
 {
 	if(config->synthetic_sources)
 	{
 		printf(">>> UPDATE: Using synthetic Sources...\n\n");
-		*sources = calloc(config->numSources, sizeof(Source));
+
+		*sources = calloc(config->num_sources, sizeof(Source));
 		if(*sources == NULL) return;
-		for(int n = 0; n < config->numSources; ++n)
+
+		for(int n = 0; n < config->num_sources; ++n)
 		{
-			(*sources)[n] = (Source) {.l = 5.0 * config->cell_size, //randomInRange(0.0, 0.5),
-								   .m = 2.0 * config->cell_size, //randomInRange(0.0, 0.5),
-								   .intensity = 1.0};
+            double half_grid = config->grid_size/2.0;
+			(*sources)[n] = (Source) {
+                .l = randomInRange(-half_grid, half_grid) * config->cell_size,
+                .m = randomInRange(-half_grid, half_grid) * config->cell_size,
+                .intensity = 1.0};
 		}
 	}
 	else
 	{
 		printf(">>> UPDATE: Using Sources from file...\n\n");
-
 		FILE *file = fopen(config->source_file, "r");
+        if(!file) return;
 
-		// Unable to open file
-		if(!file)
-		{	printf(">>> ERROR: Unable to load sources from file...\n\n");
-			return;
-		}
+		fscanf(file, "%d\n", &(config->num_sources));
+		*sources = calloc(config->num_sources, sizeof(Source));
+		if(*sources == NULL) 
+        {
+            if(file) fclose(file);
+            return;
+        }
 
-		fscanf(file, "%d\n", &(config->numSources));
-		*sources = calloc(config->numSources, sizeof(Source));
-		if(*sources == NULL) return;
-		PRECISION l,m,intensity;
-		for(int i=0;i<config->numSources;++i)
+		PRECISION l, m, intensity;
+
+		for(int i=0; i<config->num_sources; ++i)
 		{
-			fscanf(file,"%f %f %f\n",&l,&m,&intensity);
-			(*sources)[i] = (Source) {.l = l * config->cell_size,
-									  .m = m * config->cell_size,
-									  .intensity = intensity};
+			fscanf(file,"%f %f %f\n",&l ,&m, &intensity);
+			(*sources)[i] = (Source) {
+                .l = l * config->cell_size,
+                .m = m * config->cell_size,
+                .intensity = intensity};
 		}
+
 		printf(">>> UPDATE: Successfully loaded %d sources from file..\n\n",config->numSources);
 		fclose(file);
 	}
 }
 
-void loadVisibilities(Config *config, Visibility **visibilities)
+void load_visibilities(Config *config, Visibility **visibilities)
 {
 	if(config->synthetic_visibilities)
 	{
 		printf(">>> UPDATE: Using synthetic Visibilities...\n\n");
-		//int visCounter = 10;
-
-		*visibilities =  calloc(config->numVisibilities, sizeof(Visibility));
+		*visibilities =  calloc(config->num_visibilities, sizeof(Visibility));
 		if(*visibilities == NULL)  return;
-		double gV = 1.0;
-		double gU = 1.0;
+
+		double gaussian_u = 1.0;
+		double gaussian_v = 1.0;
+        double u = 0.0;
+        double v = 0.0;
+
 		//try randomize visibilities in the center of the grid
-		for(int i=0;i<config->numVisibilities;++i)
-		{	if(config->gaussian_distribution_sources)
-			{	gV = sampleNormal();
-				gU = sampleNormal();
+		for(int i=0;i<config->num_visibilities;++i)
+		{	
+            if(config->gaussian_distribution_sources)
+			{
+            	gaussian_u = generate_sample_normal();
+				gaussian_v = generate_sample_normal();
 			}
-			double u = randomInRange(config->min_u,config->max_u) * gU;
-			double v = randomInRange(config->min_v,config->max_v) * gV;
-			(*visibilities)[i] = (Visibility) {.u = u / config->uv_scale, .v = v / config->uv_scale};
+
+			u = random_in_range(config->min_u,config->max_u) * gaussian_u;
+			v = random_in_range(config->min_v,config->max_v) * gaussian_v;
+			(*visibilities)[i] = (Visibility) {
+                .u = u / config->uv_scale,
+                .v = v / config->uv_scale};
 		}
-		printf("Total vis: %d\n", config->numVisibilities);
 	}
 	else
 	{
@@ -182,17 +139,14 @@ void loadVisibilities(Config *config, Visibility **visibilities)
 	}
 }
 
-void performExtraction(Config *config, Source *sources, Visibility *visibilities)
+void perform_extraction(Config *config, Source *sources, Visibility *visibilities)
 {
 	printf(">>> UPDATE: Performing extraction of visibilities from sources...\n\n");
 
 	// For all visibilities
-	for(int v = 0; v < config->numVisibilities; ++v)
+	for(int v = 0; v < config->num_visibilities; ++v)
 	{
 		Visibility *vis = &visibilities[v];
-		//vis->u /= config->uv_scale;
-		//vis->v /= config->uv_scale;
-		// vis->w *= config->uv_scale;
 		Complex sourceSum = (Complex) {.real = 0.0, .imaginary = 0.0};
 
 		// For all sources
@@ -233,15 +187,15 @@ void saveVisibilities(Config *config, Visibility *visibilities)
 	fprintf(file, "%d\n", config->numVisibilities);
 
 	// Scalar from meters to wavelengths
-	double wavelengthScalar = config->frequency_hz / C;
+	double wavelength_to_meters = config->frequency_hz / C;
 
 	// Record individual visibilities
 	for(int n = 0; n < config->numVisibilities; ++n)
 	{
-		// u, v, w, real, imag
-		fprintf(file, "%f %f %f %f %f %f\n", visibilities[n].u / wavelengthScalar,
-										   visibilities[n].v / wavelengthScalar,
-										   visibilities[n].w / wavelengthScalar,
+		// u, v, w, real, imag, intensity
+		fprintf(file, "%f %f %f %f %f %f\n", visibilities[n].u / wavelength_to_meters,
+										   visibilities[n].v / wavelength_to_meters,
+										   visibilities[n].w / wavelength_to_meters,
 										   visibilities[n].intensity.real,
 										   visibilities[n].intensity.imaginary,
 										   1.0);
@@ -253,24 +207,21 @@ void saveVisibilities(Config *config, Visibility *visibilities)
 	printf(">>> UPDATE: Completed writing of visibilities to file...\n\n");
 }
 
-double randomInRange(double min, double max)
+double random_in_range(double min, double max)
 {
     double range = (max - min);
     double div = RAND_MAX / range;
     return min + (rand() / div);
 }
 
-double sampleNormal()
+double generate_sample_normal()
 {
-	double u = ((double) rand()/RAND_MAX) * 2 -1;
-	double v = ((double) rand()/RAND_MAX) * 2 -1;
+	double u = ((double) rand()/RAND_MAX) * 2.0 - 1.0;
+	double v = ((double) rand()/RAND_MAX) * 2.0 - 1.0;
 	double r = u*u + v*v;
-	if(r <= 0 || r > 1)
-		return sampleNormal();
-	double c = sqrt(-2 * log(r)/r);
-	if((u * v * c) > 1.0 || (u * v * c) < -1.0)
-		return sampleNormal();
-	return u * v * c;
+	if(r <= 0.0 || r > 1.0)
+		return generate_sample_normal();
+	return u * sqrt(-2.0 * log(r)/r);
 }
 
 
