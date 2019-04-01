@@ -1,4 +1,8 @@
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef DIRECT_FOURIER_TRANSFORM_H_
 #define DIRECT_FOURIER_TRANSFORM_H_
 
@@ -75,3 +79,8 @@ double randomInRange(double min, double max);
 double sampleNormal();
 
 #endif /* DIRECT_FOURIER_TRANSFORM_H_ */
+
+#ifdef __cplusplus
+}
+#endif
+
