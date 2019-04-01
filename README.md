@@ -33,10 +33,10 @@ $ valgrind --leak-check=yes ./dft
 ```
 To execute unit testing, execute the following (also assumes appropriate *build* folder):
 ```bash
-./tests
+$ ./tests
 ````
 To execute the direct fourier transform (once configured and built), execute the following command (also assumes appropriate *build* folder):
 ```bash
-./dft
+$ ./dft
 ````
 
