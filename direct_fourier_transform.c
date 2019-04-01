@@ -50,16 +50,8 @@ int main(int argc, const char* argv[])
 	}
 
 	// Perform extraction of visibilities
-	if(config.gpu_enabled)
-	{
-		printf(">>> UPDATE: Performing visibility extraction using GPU...\n\n");
-		// Call CUDA kernel here
-	}
-	else
-	{
-		printf(">>> UPDATE: Performing visibility extraction using CPU...\n\n");
-		performExtraction(&config, sources, visibilities);
-	}
+	printf(">>> UPDATE: Performing visibility extraction using CPU...\n\n");
+	performExtraction(&config, sources, visibilities);
 
 	// Save visibilities to file
 	saveVisibilities(&config, visibilities);
@@ -86,9 +78,6 @@ void initConfig(Config *config)
 
 	// if using synthetic visibility creation, set this flag to Gaussian distribute random visibility positions
 	config->gaussian_distribution_sources = false;
-
-	// Use parallelization
-	config->gpu_enabled = false;
 
 	// Origin of Sources
 	config->source_file = "../sources.txt";

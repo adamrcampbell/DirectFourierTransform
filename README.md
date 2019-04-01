@@ -22,14 +22,14 @@
 5. Build direct fourier transform project (from project folder)
    ```bash
    $ mkdir build && cd build
-   $ cmake .. && make
+   $ cmake .. -DCMAKE_BUILD_TYPE=Debug && make
    ```
 
 ---
 ##### Instructions for usage of this software (includes executing, testing, and profiling):
 To perform memory checking, memory leak analysis, and profiling using [Valgrind](http://valgrind.org/docs/manual/quick-start.html), execute the following (assumes you are in the appropriate *build* folder (see step 5 above):
 ```bash
-$ valgrind --leak-check=yes dft
+$ valgrind --leak-check=yes ./dft
 ```
 To execute unit testing, execute the following (also assumes appropriate *build* folder):
 ```bash
