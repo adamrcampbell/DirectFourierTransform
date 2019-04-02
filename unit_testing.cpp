@@ -1,6 +1,9 @@
 
-#include "direct_fourier_transform.c" // or header?
+#include <cstdlib>
+#include <cstdio>
 #include <gtest/gtest.h>
+
+#include "direct_fourier_transform.h"
  
 // Dummy tests to use as examples
 // TEST(SquareRootTest, PositiveNos) { 

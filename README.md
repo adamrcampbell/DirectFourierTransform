@@ -1,32 +1,36 @@
 # Direct Fourier Transform - CPU Implementation
 ###### Note: currently single threaded; multithreaded CPU implementation considered for future work.
 ---
-##### Instructions for installation of this software (includes profiling and unit testing):
+##### Instructions for installation of this software (includes profiling, linting, building, and unit testing):
 1. Install [Valgrind](http://valgrind.org/) (profiling, memory checks, memory leaks etc.)
-   ```bash 
-   $ sudo apt-get install valgrind 
+   ```bash
+   $ sudo apt install valgrind
    ```
 2. Install [Cmake](https://cmake.org/)/[Makefile](https://www.gnu.org/software/make/) (build tools)
    ```bash
-   $ sudo apt-get install cmake
+   $ sudo apt install cmake
    ```
 3. Install [Google Test](https://github.com/google/googletest) (unit testing) - See [this tutorial](https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/) for tutorial on using Google Test library
    ```bash
-   $ sudo apt-get install libgtest-dev
+   $ sudo apt install libgtest-dev
    $ cd /usr/src/gtest
    $ sudo cmake CMakeLists.txt
    $ sudo make
    $ sudo cp *.a /usr/lib
    ```
-4. Configure the code for usage (**modify direct_fourier_transform.c config**)
-5. Build direct fourier transform project (from project folder)
+4. Install [Cppcheck](http://cppcheck.sourceforge.net/) (linting)
+   ```bash
+   $ sudo apt install cppcheck
+   ```
+5. Configure the code for usage (**modify direct_fourier_transform.c config**)
+6. Build direct fourier transform project (from project folder)
    ```bash
    $ mkdir build && cd build
    $ cmake .. -DCMAKE_BUILD_TYPE=Debug && make
    ```
 
 ---
-##### Instructions for usage of this software (includes executing, testing, and profiling):
+##### Instructions for usage of this software (includes executing, testing, linting, and profiling):
 To perform memory checking, memory leak analysis, and profiling using [Valgrind](http://valgrind.org/docs/manual/quick-start.html), execute the following (assumes you are in the appropriate *build* folder (see step 5 above):
 ```bash
 $ valgrind --leak-check=yes ./dft
@@ -35,8 +39,14 @@ To execute unit testing, execute the following (also assumes appropriate *build*
 ```bash
 $ ./tests
 ````
+To execute linting, execute the following commands (assumes you are in the appropriate source code folder):
+```bash
+$ cppchecker main.cpp
+$ cppchecker direct_fourier_transform.c
+$ cppchecker unit_testing.cpp
+```
+
 To execute the direct fourier transform (once configured and built), execute the following command (also assumes appropriate *build* folder):
 ```bash
-$ ./dft
-````
-
+$ ./dft sources.csv visibilities.csv
+```

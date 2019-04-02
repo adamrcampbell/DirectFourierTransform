@@ -7,6 +7,20 @@ extern "C" {
 #define DIRECT_FOURIER_TRANSFORM_H_
 
 //=========================//
+//   Algorithm Constants   //
+//=========================//
+
+// Pi (double precision)
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846
+#endif
+
+// Speed of light
+#ifndef C
+	#define C 299792458.0
+#endif
+
+//=========================//
 // Algorithm Configurables //
 //=========================//
 
@@ -48,11 +62,10 @@ typedef struct Visibility {
 } Visibility;
 
 typedef struct Config {
-	int numVisibilities;
-	int numSources;
+	int num_visibilities;
+	int num_sources;
 	char *source_file;
 	char *vis_file;
-	bool gpu_enabled;
 	bool synthetic_sources;
 	bool synthetic_visibilities;
 	bool gaussian_distribution_sources;
@@ -70,13 +83,13 @@ typedef struct Config {
 //=========================//
 //     Function Headers    //
 //=========================//
-void initConfig (Config *config);
-void loadSources(Config *config, Source **sources);
-void loadVisibilities(Config *config, Visibility **visibilities);
-void performExtraction(Config *config, Source *sources, Visibility *visibilities);
-void saveVisibilities(Config *config, Visibility *visibilities);
-double randomInRange(double min, double max);
-double sampleNormal();
+void init_config (Config *config);
+void load_sources(Config *config, Source **sources);
+void load_visibilities(Config *config, Visibility **visibilities);
+void perform_extraction(Config *config, Source *sources, Visibility *visibilities);
+void save_visibilities(Config *config, Visibility *visibilities);
+double random_in_range(double min, double max);
+double generate_sample_normal(void);
 
 #endif /* DIRECT_FOURIER_TRANSFORM_H_ */
 
