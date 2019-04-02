@@ -65,10 +65,9 @@ void load_sources(Config *config, Source **sources)
 
 		for(int n = 0; n < config->num_sources; ++n)
 		{
-            double half_grid = config->grid_size/2.0;
 			(*sources)[n] = (Source) {
-                .l = random_in_range(-half_grid, half_grid) * config->cell_size,
-                .m = random_in_range(-half_grid, half_grid) * config->cell_size,
+                .l = random_in_range(config->min_u,config->max_u) * config->cell_size,
+                .m = random_in_range(config->min_v,config->max_v) * config->cell_size,
                 .intensity = 1.0};
 		}
 	}
