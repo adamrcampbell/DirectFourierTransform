@@ -67,8 +67,8 @@ void load_sources(Config *config, Source **sources)
 		{
             double half_grid = config->grid_size/2.0;
 			(*sources)[n] = (Source) {
-                .l = randomInRange(-half_grid, half_grid) * config->cell_size,
-                .m = randomInRange(-half_grid, half_grid) * config->cell_size,
+                .l = random_in_range(-half_grid, half_grid) * config->cell_size,
+                .m = random_in_range(-half_grid, half_grid) * config->cell_size,
                 .intensity = 1.0};
 		}
 	}
@@ -97,7 +97,7 @@ void load_sources(Config *config, Source **sources)
                 .intensity = intensity};
 		}
 
-		printf(">>> UPDATE: Successfully loaded %d sources from file..\n\n",config->numSources);
+		printf(">>> UPDATE: Successfully loaded %d sources from file..\n\n",config->num_sources);
 		fclose(file);
 	}
 }
@@ -150,13 +150,14 @@ void perform_extraction(Config *config, Source *sources, Visibility *visibilitie
 		Complex sourceSum = (Complex) {.real = 0.0, .imaginary = 0.0};
 
 		// For all sources
-		for(int s = 0; s < config->numSources; ++s)
+		for(int s = 0; s < config->num_sources; ++s)
 		{
 			Source *src = &sources[s];
 			double srcSqrt = sqrt(1.0 - pow(src->l, 2.0) - pow(src->m, 2.0));
 			double theta = vis->u*src->l + vis->v*src->m + vis->w*(srcSqrt-1.0);
-			Complex thetaComplex = (Complex) {.real = cos(2.0 * M_PI * theta),
-											  .imaginary = -sin(2.0 * M_PI * theta)};
+			Complex thetaComplex = (Complex) {
+                .real = cos(2.0 * M_PI * theta),
+				.imaginary = -sin(2.0 * M_PI * theta)};
 			thetaComplex.real *= src->intensity / srcSqrt;
 			thetaComplex.imaginary *= src->intensity / srcSqrt;
 			sourceSum.real += thetaComplex.real;
@@ -169,7 +170,7 @@ void perform_extraction(Config *config, Source *sources, Visibility *visibilitie
 	printf(">>> UPDATE: Extraction complete...\n\n");
 }
 
-void saveVisibilities(Config *config, Visibility *visibilities)
+void save_visibilities(Config *config, Visibility *visibilities)
 {
 	// Save visibilities to file
 	FILE *file = fopen(config->vis_file, "w");
@@ -184,21 +185,22 @@ void saveVisibilities(Config *config, Visibility *visibilities)
 	printf(">>> UPDATE: Writing visibilities to file...\n\n");
 
 	// Record number of visibilities
-	fprintf(file, "%d\n", config->numVisibilities);
+	fprintf(file, "%d\n", config->num_visibilities);
 
 	// Scalar from meters to wavelengths
 	double wavelength_to_meters = config->frequency_hz / C;
 
 	// Record individual visibilities
-	for(int n = 0; n < config->numVisibilities; ++n)
+	for(int n = 0; n < config->num_visibilities; ++n)
 	{
 		// u, v, w, real, imag, intensity
-		fprintf(file, "%f %f %f %f %f %f\n", visibilities[n].u / wavelength_to_meters,
-										   visibilities[n].v / wavelength_to_meters,
-										   visibilities[n].w / wavelength_to_meters,
-										   visibilities[n].intensity.real,
-										   visibilities[n].intensity.imaginary,
-										   1.0);
+		fprintf(file, "%f %f %f %f %f %f\n", 
+            visibilities[n].u / wavelength_to_meters,
+			visibilities[n].v / wavelength_to_meters,
+		    visibilities[n].w / wavelength_to_meters,
+            visibilities[n].intensity.real,
+		    visibilities[n].intensity.imaginary,
+		    1.0);
 	}
 
 	// Clean up

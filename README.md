@@ -34,19 +34,19 @@
 To perform memory checking, memory leak analysis, and profiling using [Valgrind](http://valgrind.org/docs/manual/quick-start.html), execute the following (assumes you are in the appropriate *build* folder (see step 5 above):
 ```bash
 $ valgrind --leak-check=yes ./dft
+$ valgrind --leak-check=yes ./tests
+```
+To execute linting, execute the following commands (assumes you are in the appropriate source code folder):
+```bash
+$ cppcheck --enable=all main.cpp
+$ cppcheck --enable=all direct_fourier_transform.c
+$ cppcheck --enable=all unit_testing.cpp
 ```
 To execute unit testing, execute the following (also assumes appropriate *build* folder):
 ```bash
 $ ./tests
 ````
-To execute linting, execute the following commands (assumes you are in the appropriate source code folder):
-```bash
-$ cppchecker main.cpp
-$ cppchecker direct_fourier_transform.c
-$ cppchecker unit_testing.cpp
-```
-
 To execute the direct fourier transform (once configured and built), execute the following command (also assumes appropriate *build* folder):
 ```bash
-$ ./dft sources.csv visibilities.csv
+$ ./dft
 ```
