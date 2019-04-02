@@ -33,8 +33,8 @@
 ##### Instructions for usage of this software (includes executing, testing, linting, and profiling):
 To perform memory checking, memory leak analysis, and profiling using [Valgrind](http://valgrind.org/docs/manual/quick-start.html), execute the following (assumes you are in the appropriate *build* folder (see step 5 above):
 ```bash
-$ valgrind --leak-check=yes ./dft
-$ valgrind --leak-check=yes ./tests
+$ valgrind --leak-check=yes -v ./dft
+$ valgrind --leak-check=yes -v ./tests
 ```
 To execute linting, execute the following commands (assumes you are in the appropriate source code folder):
 ```bash
