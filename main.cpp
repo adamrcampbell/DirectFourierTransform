@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 	Config config;
 	init_config(&config);
 
-	// Obtain Sources from file
+	// Obtain Sources from file, or synthesize
 	Source *sources = NULL;
 	load_sources(&config, &sources);
     // Unable to obtain Sources
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	// Obtain Visibilities from file
+	// Obtain Visibilities from file, or synthesize
 	Visibility *visibilities = NULL;
 	load_visibilities(&config, &visibilities);
 
