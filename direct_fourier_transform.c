@@ -32,7 +32,8 @@ void init_config(Config *config)
 	// Use fixed visibilities (not from file)
 	config->synthetic_visibilities = true;
 
-	// if using synthetic visibility creation, set this flag to Gaussian distribute random visibility positions
+	// if using synthetic visibility creation, set this flag
+	// to Gaussian distribute random visibility positions
 	config->gaussian_distribution_sources = false;
 
 	// Origin of Sources
@@ -73,7 +74,6 @@ void load_sources(Config *config, Source **sources)
 	if(config->synthetic_sources)
 	{
 		printf(">>> UPDATE: Using synthetic Sources...\n\n");
-
 		*sources = calloc(config->num_sources, sizeof(Source));
 		if(*sources == NULL) return;
 
@@ -123,10 +123,10 @@ void load_visibilities(Config *config, Visibility **visibilities)
 		*visibilities =  calloc(config->num_visibilities, sizeof(Visibility));
 		if(*visibilities == NULL)  return;
 
-		double gaussian_u = 1.0;
-		double gaussian_v = 1.0;
-        double u = 0.0;
-        double v = 0.0;
+		PRECISION gaussian_u = 1.0;
+		PRECISION gaussian_v = 1.0;
+        PRECISION u = 0.0;
+        PRECISION v = 0.0;
 
 		//try randomize visibilities in the center of the grid
 		for(int i=0;i<config->num_visibilities;++i)
@@ -166,11 +166,12 @@ void perform_extraction(Config *config, Source *sources, Visibility *visibilitie
 		for(int s = 0; s < config->num_sources; ++s)
 		{
 			Source *src = &sources[s];
-			double srcSqrt = sqrt(1.0 - pow(src->l, 2.0) - pow(src->m, 2.0));
-			double theta = vis->u*src->l + vis->v*src->m + vis->w*(srcSqrt-1.0);
+			PRECISION srcSqrt = SQRT(1.0 - POW(src->l, 2.0) - POW(src->m, 2.0));
+			PRECISION theta = vis->u*src->l + vis->v*src->m + vis->w*(srcSqrt-1.0);
 			Complex thetaComplex = (Complex) {
-                .real = cos(2.0 * M_PI * theta),
-				.imaginary = -sin(2.0 * M_PI * theta)};
+                .real      =  COS(2.0 * M_PI * theta),
+				.imaginary = -SQRT(2.0 * M_PI * theta)};
+
 			thetaComplex.real *= src->intensity / srcSqrt;
 			thetaComplex.imaginary *= src->intensity / srcSqrt;
 			sourceSum.real += thetaComplex.real;
@@ -201,7 +202,7 @@ void save_visibilities(Config *config, Visibility *visibilities)
 	fprintf(file, "%d\n", config->num_visibilities);
 
 	// Scalar from meters to wavelengths
-	double wavelength_to_meters = config->frequency_hz / C;
+	PRECISION wavelength_to_meters = config->frequency_hz / C;
 
 	// Record individual visibilities
 	for(int n = 0; n < config->num_visibilities; ++n)
@@ -222,21 +223,21 @@ void save_visibilities(Config *config, Visibility *visibilities)
 	printf(">>> UPDATE: Completed writing of visibilities to file...\n\n");
 }
 
-double random_in_range(double min, double max)
+PRECISION random_in_range(PRECISION min, PRECISION max)
 {
-    double range = (max - min);
-    double div = RAND_MAX / range;
+    PRECISION range = (max - min);
+    PRECISION div = RAND_MAX / range;
     return min + (rand() / div);
 }
 
-double generate_sample_normal()
+PRECISION generate_sample_normal()
 {
-	double u = ((double) rand()/RAND_MAX) * 2.0 - 1.0;
-	double v = ((double) rand()/RAND_MAX) * 2.0 - 1.0;
-	double r = u*u + v*v;
+	PRECISION u = ((PRECISION) rand()/RAND_MAX) * 2.0 - 1.0;
+	PRECISION v = ((PRECISION) rand()/RAND_MAX) * 2.0 - 1.0;
+	PRECISION r = u*u + v*v;
 	if(r <= 0.0 || r > 1.0)
 		return generate_sample_normal();
-	return u * sqrt(-2.0 * log(r)/r);
+	return u * SQRT(-2.0 * LOG(r)/r);
 }
 
 
