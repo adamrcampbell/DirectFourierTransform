@@ -1,5 +1,7 @@
 
-// Copyright 2019 AUT High Performance Computing Research Laboratory
+// Copyright 2019 Adam Campbell, 
+// High Performance Computing Research Laboratory, 
+// Auckland University of Technology (AUT)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,27 +33,23 @@ int main(int argc, char **argv)
 	// Obtain Sources from file, or synthesize
 	Source *sources = NULL;
 	load_sources(&config, &sources);
-    // Unable to obtain Sources
+    // Something went wrong during loading of sources
 	if(sources == NULL)
-	{	
-        printf(">>> ERROR: Source memory was unable to be allocated \n");
 		return EXIT_FAILURE;
-	}
 
 	// Obtain Visibilities from file, or synthesize
 	Visibility *visibilities = NULL;
 	load_visibilities(&config, &visibilities);
 
-    // Unable to obtain visibilities
+    // Something went wrong during loading of visibilities
 	if(visibilities == NULL)
-	{	printf(">>> ERROR: Visibility memory was unable to be allocated \n");
+	{
 	    if(sources) free(sources);
 		return EXIT_FAILURE;
 	}
 
-	// Perform extraction of visibilities
 	printf(">>> UPDATE: Performing visibility extraction using CPU...\n\n");
-	perform_extraction(&config, sources, visibilities);
+	extract_visibilities(&config, sources, visibilities);
 
 	// Save visibilities to file
 	save_visibilities(&config, visibilities);

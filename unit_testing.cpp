@@ -1,5 +1,7 @@
 
-// Copyright 2019 AUT High Performance Computing Research Laboratory
+// Copyright 2019 Adam Campbell, 
+// High Performance Computing Research Laboratory, 
+// Auckland University of Technology (AUT)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
