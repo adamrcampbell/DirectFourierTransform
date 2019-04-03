@@ -1,5 +1,7 @@
 
-// Copyright 2019 AUT High Performance Computing Research Laboratory
+// Copyright 2019 Adam Campbell, 
+// High Performance Computing Research Laboratory, 
+// Auckland University of Technology (AUT)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,79 +37,26 @@ extern "C" {
 #endif
 
 //=========================//
-// Algorithm Configurables //
-//=========================//
-
-// Flip between single/double
-#ifndef SINGLE_PRECISION
-	#define SINGLE_PRECISION 1
-#endif
-
-// Define global precision
-#ifndef PRECISION
-	#if SINGLE_PRECISION
-		#define PRECISION float
-	#else
-		#define PRECISION double
-	#endif
-#endif
-
-// Dynamic square root subsitution
-#ifndef SQRT
-	#if SINGLE_PRECISION
-		#define SQRT sqrtf
-	#else
-		#define SQRT sqrt
-	#endif
-#endif
-
-// Dynamic power subsitution
-#ifndef POW
-	#if SINGLE_PRECISION
-		#define POW powf
-	#else
-		#define POW pow
-	#endif
-#endif
-
-// Dynamic cosine subsitution
-#ifndef COS
-	#if SINGLE_PRECISION
-		#define COS cosf
-	#else
-		#define COS cos
-	#endif
-#endif
-
-// Dynamic logarithm subsitution
-#ifndef LOG
-	#if SINGLE_PRECISION
-		#define LOG logf
-	#else
-		#define LOG log
-	#endif
-#endif
-
-//=========================//
 //        Structures       //
 //=========================//
 
 typedef struct Complex {
-	PRECISION real;
-	PRECISION imaginary;
+	double real;
+	double imaginary;
 } Complex;
 
 typedef struct Source {
-	PRECISION l;
-	PRECISION m;
-	PRECISION intensity;
+	double l;
+	double m;
+	double intensity;
 } Source;
 
 typedef struct Visibility {
-	PRECISION u;
-	PRECISION v;
-	PRECISION w;
-	Complex intensity;
+	double u;
+	double v;
+	double w;
+	Complex brightness;
+	double intensity;
 } Visibility;
 
 typedef struct Config {
@@ -118,14 +67,14 @@ typedef struct Config {
 	bool synthetic_sources;
 	bool synthetic_visibilities;
 	bool gaussian_distribution_sources;
-	PRECISION min_u;
-	PRECISION max_u;
-	PRECISION min_v;
-	PRECISION max_v;
-	PRECISION grid_size;
-	PRECISION cell_size;
-	PRECISION uv_scale;
-	PRECISION frequency_hz;
+	double min_u;
+	double max_u;
+	double min_v;
+	double max_v;
+	double grid_size;
+	double cell_size;
+	double uv_scale;
+	double frequency_hz;
 } Config;
 
 
@@ -138,13 +87,13 @@ void load_sources(Config *config, Source **sources);
 
 void load_visibilities(Config *config, Visibility **visibilities);
 
-void perform_extraction(Config *config, Source *sources, Visibility *visibilities);
+void extract_visibilities(Config *config, Source *sources, Visibility *visibilities);
 
 void save_visibilities(Config *config, Visibility *visibilities);
 
-PRECISION random_in_range(PRECISION min, PRECISION max);
+double random_in_range(double min, double max);
 
-PRECISION generate_sample_normal(void);
+double generate_sample_normal(void);
 
 #endif /* DIRECT_FOURIER_TRANSFORM_H_ */
 
