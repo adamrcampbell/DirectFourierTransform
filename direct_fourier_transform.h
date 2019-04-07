@@ -67,10 +67,13 @@ typedef struct Config {
 	bool synthetic_sources;
 	bool synthetic_visibilities;
 	bool gaussian_distribution_sources;
+	bool forceZeroWTerm;
 	double min_u;
 	double max_u;
 	double min_v;
 	double max_v;
+	double min_w;
+	double max_w;
 	double grid_size;
 	double cell_size;
 	double uv_scale;

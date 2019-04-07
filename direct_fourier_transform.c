@@ -39,19 +39,23 @@ void init_config(Config *config)
 	// to Gaussian distribute random visibility positions.
 	config->gaussian_distribution_sources = false;
 
+	// Force synthetic visibilities to have a 0 w term,
+	// or generate a random w term between min_w and max_w
+	config->forceZeroWTerm = false;
+
 	// Cache File for Sources
 	// File format : first row = number of sources in file
 	// subsequent rows = each unique source in the form:
 	// l, m, intensity
 	// note: data can be either single or double precision
-	config->source_file = "../sources.txt";
+	config->source_file = "../example_sources.txt";
 
 	// Cache File for Visibilities
 	// File format : first row = number of visibilities in file
 	// subsequent rows = each unique visibility in the form:
 	// u, v, w, brightness (real), brightness (imag), intensity
 	// note: data can be either single or double precision
-	config->vis_file    = "../visibilities.txt";
+	config->vis_file    = "../example_visibilities.txt";
 
 	// Dimension of Fourier domain grid
 	config->grid_size = 1024;
@@ -72,6 +76,10 @@ void init_config(Config *config)
 	// Range for visibility v coordinates for synthesizing data
 	config->min_v = -(config->grid_size / 2.0);
 	config->max_v = config->grid_size / 2.0;
+
+	// Range for visibility w coordinates for synthesizing data
+	config->min_w = config->min_v; // fixed to v coordinates for now
+	config->max_w = config->max_v; // fixed to v coordinates for now
 
 	// Number of visibilities per source to synthesize
 	// if no file provided.
@@ -166,7 +174,8 @@ void load_visibilities(Config *config, Visibility **visibilities)
 		}
 
 		double gaussian_u = 1.0;
-		double gaussian_v = 0.0;
+		double gaussian_v = 1.0;
+		double gaussian_w = 1.0;
 
 		//try randomize visibilities in the center of the grid
 		for(int vis_indx = 0; vis_indx < config->num_visibilities; ++vis_indx)
@@ -176,14 +185,19 @@ void load_visibilities(Config *config, Visibility **visibilities)
 			{
             	gaussian_u = generate_sample_normal();
 				gaussian_v = generate_sample_normal();
+				gaussian_w = generate_sample_normal();
 			}
 
 			// Generating the random u,v coordinates of this visibility
 			double u = random_in_range(config->min_u,config->max_u) * gaussian_u;
 			double v = random_in_range(config->min_v,config->max_v) * gaussian_v;
+			double w = (config->forceZeroWTerm) ? 0.0
+				: random_in_range(config->min_w / 10.0, config->max_w / 10.0) * gaussian_w;
+
 			(*visibilities)[vis_indx] = (Visibility) {
                 .u = u / config->uv_scale,
-                .v = v / config->uv_scale};
+                .v = v / config->uv_scale,
+            	.w = w / config->uv_scale};
 		}
 	}
 	else // Using visibilities from file
@@ -229,7 +243,7 @@ void load_visibilities(Config *config, Visibility **visibilities)
 			(*visibilities)[vis_indx] = (Visibility) {
                 .u = u * wavelength_to_meters,
                 .v = v * wavelength_to_meters,
-                .w = 0.0 * wavelength_to_meters, // fixed to 0 (for now) 
+                .w = (config->forceZeroWTerm) ? 0.0 : w * wavelength_to_meters,
             	.brightness.real = brightness.real,
             	.brightness.imaginary = brightness.imaginary,
             	.intensity = 1.0}; // fixed to 1.0 (for now)
@@ -255,16 +269,16 @@ void extract_visibilities(Config *config, Source *sources, Visibility *visibilit
 		// For all sources, obtain some portion of brightness
 		for(int src_indx = 0; src_indx < config->num_sources; ++src_indx)
 		{
-			Source *src     = &sources[src_indx];
-			double src_sqrt = sqrt(1.0 - pow(src->l, 2.0) - pow(src->m, 2.0));
-			double theta    = vis->u * src->l + vis->v * src->m + vis->w * (src_sqrt - 1.0);
+			Source *src             = &sources[src_indx];
+			double image_correction = sqrt(1.0 - pow(src->l, 2.0) - pow(src->m, 2.0));
+			double theta            = vis->u * src->l + vis->v * src->m + vis->w * (image_correction - 1.0);
 			
 			Complex theta_complex = (Complex) {
                 			.real =  cos(2.0 * M_PI * theta),
 					   .imaginary = -sin(2.0 * M_PI * theta)
 			};
 
-			double normalized_intensity     = src->intensity / src_sqrt;
+			double normalized_intensity     = src->intensity / image_correction;
 			theta_complex.real             *= normalized_intensity;
 			theta_complex.imaginary        *= normalized_intensity;
 			source_sum.real                += theta_complex.real;
