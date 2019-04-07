@@ -1,5 +1,5 @@
 
-// Copyright 2019 Adam Campbell, 
+// Copyright 2019 Adam Campbell, Seth Hall, Andrew Ensor
 // High Performance Computing Research Laboratory, 
 // Auckland University of Technology (AUT)
 //
@@ -22,18 +22,18 @@
 
 int main(int argc, char **argv)
 {
-    printf("==============================================================\n");
+	printf("==============================================================\n");
 	printf(">>> AUT HPC Research Laboratory - Direct Fourier Transform <<<\n");
 	printf("==============================================================\n\n");
 
-    // Initialise the DFT configuration
+	// Initialise the DFT configuration
 	Config config;
 	init_config(&config);
 
 	// Obtain Sources from file, or synthesize
 	Source *sources = NULL;
 	load_sources(&config, &sources);
-    // Something went wrong during loading of sources
+	// Something went wrong during loading of sources
 	if(sources == NULL)
 		return EXIT_FAILURE;
 
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 	Visibility *visibilities = NULL;
 	load_visibilities(&config, &visibilities);
 
-    // Something went wrong during loading of visibilities
+	// Something went wrong during loading of visibilities
 	if(visibilities == NULL)
 	{
 	    if(sources) free(sources);
