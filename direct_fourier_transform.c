@@ -1,5 +1,5 @@
 
-// Copyright 2019 Adam Campbell, 
+// Copyright 2019 Adam Campbell, Seth Hall, Andrew Ensor
 // High Performance Computing Research Laboratory, 
 // Auckland University of Technology (AUT)
 //
