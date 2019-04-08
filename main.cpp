@@ -48,9 +48,10 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	printf(">>> UPDATE: Performing visibility extraction using CPU...\n\n");
-	extract_visibilities(&config, sources, visibilities);
-
+	printf(">>> UPDATE: Performing extraction of visibilities from sources...\n\n");
+	extract_visibilities(&config, sources, visibilities, config.num_visibilities);
+	printf(">>> UPDATE: Visibility extraction complete...\n\n");
+	
 	// Save visibilities to file
 	save_visibilities(&config, visibilities);
 

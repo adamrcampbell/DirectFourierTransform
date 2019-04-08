@@ -20,10 +20,16 @@
 #include <gtest/gtest.h>
 
 #include "direct_fourier_transform.h"
- 
-TEST(DerpTest, EqualDerp)
+
+// Test performs DFT on a fixed set of sources, produces a set of visibilities using said sources
+// and compares these visibilities against a set of correct visibilities for these sources.
+// A threshold is used to determine acceptance as equality is not an ideal assertion for
+// non-integer numbers due to rounding error.
+TEST(DFTTest, VisibilitiesApproximatelyEqual)
 {
-    ASSERT_EQ(1.0, 1.0);
+	double threshold = 1e-5; // 0.00001
+	double difference = unit_test_generate_approximate_visibilities();
+    ASSERT_LE(difference, threshold); // x <= y
 }
 
 int main(int argc, char **argv) {

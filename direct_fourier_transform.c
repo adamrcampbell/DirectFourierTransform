@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <time.h>
+#include <float.h>
 
 #include "direct_fourier_transform.h"
 
@@ -83,7 +84,7 @@ void init_config(Config *config)
 
 	// Number of visibilities per source to synthesize
 	// if no file provided.
-	config->num_visibilities = 5;
+	config->num_visibilities = 10000;
 
 	// Seed random from time (used for synthetic data)
 	srand(time(NULL));
@@ -257,13 +258,11 @@ void load_visibilities(Config *config, Visibility **visibilities)
 
 // Performs the inverse direct fourier transformation to obtain the complex brightness
 // of each visibility from each identified source. This is the meat of the algorithm.
-void extract_visibilities(Config *config, Source *sources, Visibility *visibilities)
+void extract_visibilities(Config *config, Source *sources, Visibility *visibilities, int num_visibilities)
 {
-	printf(">>> UPDATE: Performing extraction of visibilities from sources...\n\n");
-
-	for(int vis_idx = 0; vis_idx < config->num_visibilities; ++vis_idx)
+	for(int vis_indx = 0; vis_indx < num_visibilities; ++vis_indx)
 	{
-		Visibility *vis = &visibilities[vis_idx];
+		Visibility *vis = &visibilities[vis_indx];
 		Complex source_sum = (Complex) {.real = 0.0, .imaginary = 0.0};
 
 		// For all sources, obtain some portion of brightness
@@ -287,8 +286,6 @@ void extract_visibilities(Config *config, Source *sources, Visibility *visibilit
 
 		vis->brightness = source_sum;
 	}
-
-	printf(">>> UPDATE: Visibility extraction complete...\n\n");
 }
 
 // Saves the extracted visibility data to file
@@ -353,4 +350,106 @@ double generate_sample_normal()
 	if(r <= 0.0 || r > 1.0)
 		return generate_sample_normal();
 	return u * sqrt(-2.0 * log(r) / r);
+}
+
+//**************************************//
+//      UNIT TESTING FUNCTIONALITY      //
+//**************************************//
+
+void unit_test_init_config(Config *config)
+{
+	config->num_sources = 1;
+	config->synthetic_sources = false;
+	config->synthetic_visibilities = false;
+	config->gaussian_distribution_sources = false;
+	config->forceZeroWTerm = false;
+	config->source_file = "../unit_test_sources.txt";
+	config->vis_file    = "../unit_test_visibilities.txt";
+	config->grid_size = 1024;
+	config->cell_size = 4.848136811095360e-06;
+	config->frequency_hz = 300e6;
+	config->uv_scale = config->grid_size * config->cell_size;
+	config->min_u = -(config->grid_size / 2.0);
+	config->max_u = config->grid_size / 2.0;
+	config->min_v = -(config->grid_size / 2.0);
+	config->max_v = config->grid_size / 2.0;
+	config->min_w = config->min_v;
+	config->max_w = config->max_v;
+	config->num_visibilities = 1;
+}
+
+double unit_test_generate_approximate_visibilities(void)
+{
+	// used to invalidate the unit test
+	double error = DBL_MAX;
+
+	Config config;
+	unit_test_init_config(&config);
+
+	// Read in test sources
+	Source *sources = NULL;
+	load_sources(&config, &sources);
+	if(sources == NULL)
+		return error;
+
+	// Read in test visibilities and process
+	FILE *file = fopen(config.vis_file, "r");
+	if(file == NULL)
+	{
+		if(sources) free(sources);
+		return error;
+	}
+
+	fscanf(file, "%d\n", &(config.num_visibilities));
+
+    double u = 0.0;
+    double v = 0.0;
+    double w = 0.0;
+    double intensity = 0.0;
+    double difference = 0.0;
+    double wavelength_to_meters = config.frequency_hz / C;
+    Complex brightness = (Complex) {.real = 0.0, .imaginary = 0.0};
+	Visibility test_visibility;
+	Visibility approx_visibility[1]; // testing one at a time
+
+	for(int vis_indx = 0; vis_indx < config.num_visibilities; ++vis_indx)
+	{
+		fscanf(file, "%lf %lf %lf %lf %lf %lf\n", &u, &v, &w, &(brightness.real),
+        	&(brightness.imaginary), &intensity);
+
+	    test_visibility.u = u * wavelength_to_meters;
+        test_visibility.v = v * wavelength_to_meters;
+        test_visibility.w = w * wavelength_to_meters; 
+        test_visibility.brightness.real = brightness.real;
+        test_visibility.brightness.imaginary = brightness.imaginary;
+        test_visibility.intensity = intensity;
+
+		approx_visibility[0] = (Visibility) {
+			.u = test_visibility.u,
+			.v = test_visibility.v,
+			.w = test_visibility.w,
+			.brightness.real = 0.0, 	 // zero out for processing
+			.brightness.imaginary = 0.0, // zero out for processing
+			.intensity = test_visibility.intensity
+		};
+
+		// Measure one visibility brightness from n sources
+		extract_visibilities(&config, sources, approx_visibility, 1);
+
+        double current_difference = sqrt(pow(approx_visibility[0].brightness.real
+        							-test_visibility.brightness.real, 2.0)
+    								+ pow(approx_visibility[0].brightness.imaginary
+									-test_visibility.brightness.imaginary, 2.0));
+
+        if(current_difference > difference)
+            difference = current_difference;
+	}
+
+	// Clean up
+	fclose(file);
+	if(sources) free(sources);
+
+	printf(">>> INFO: Measured difference in visibilities is %f\n", difference);
+
+	return difference;
 }

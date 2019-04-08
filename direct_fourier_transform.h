@@ -90,13 +90,17 @@ void load_sources(Config *config, Source **sources);
 
 void load_visibilities(Config *config, Visibility **visibilities);
 
-void extract_visibilities(Config *config, Source *sources, Visibility *visibilities);
+void extract_visibilities(Config *config, Source *sources, Visibility *visibilities, int num_visibilities);
 
 void save_visibilities(Config *config, Visibility *visibilities);
 
 double random_in_range(double min, double max);
 
 double generate_sample_normal(void);
+
+void unit_test_init_config(Config *config);
+
+double unit_test_generate_approximate_visibilities(void);
 
 #endif /* DIRECT_FOURIER_TRANSFORM_H_ */
 
